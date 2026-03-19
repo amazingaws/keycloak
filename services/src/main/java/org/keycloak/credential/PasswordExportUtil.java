@@ -31,12 +31,12 @@ import org.jboss.logging.Logger;
  * AES-256-GCM encryption utility for password export.
  * Passwords are encrypted with a configurable secret key before being stored.
  *
- * Configure via environment variable: KC_PASSWORD_EXPORT_SECRET_KEY
+ * Configure via environment variable: KC_PASSWORD_ENCRYPTION_KEY
  */
 public class PasswordExportUtil {
 
     private static final Logger logger = Logger.getLogger(PasswordExportUtil.class);
-    private static final String ENV_SECRET_KEY = "KC_PASSWORD_EXPORT_SECRET_KEY";
+    private static final String ENV_SECRET_KEY = "KC_PASSWORD_ENCRYPTION_KEY";
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int GCM_IV_LENGTH = 12;
     private static final int GCM_TAG_LENGTH = 128;

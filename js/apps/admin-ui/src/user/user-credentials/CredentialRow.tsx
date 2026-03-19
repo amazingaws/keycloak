@@ -41,9 +41,9 @@ export const CredentialRow = ({
   const [showData, toggleShow] = useToggle();
   const [kebabOpen, toggleKebab] = useToggle();
   const localeSort = useLocaleSort();
-  const [showExportPassword, setShowExportPassword] = useState(false);
-  const [exportPassword, setExportPassword] = useState("");
-  const [exportError, setExportError] = useState("");
+  const [showViewPassword, setShowViewPassword] = useState(false);
+  const [viewPassword, setViewPassword] = useState("");
+  const [viewError, setViewError] = useState("");
 
   const rows = useMemo(() => {
     if (!credential.credentialData) {
@@ -64,15 +64,17 @@ export const CredentialRow = ({
     });
   }, [credential.credentialData]);
 
-  const viewExportPassword = async () => {
+  const viewPasswordAction = async () => {
     try {
-      setExportError("");
-      const result = await adminClient.users.getEncryptedPassword({ id: userId });
-      setExportPassword(result.encryptedPassword);
-      setShowExportPassword(true);
+      setViewError("");
+      const result = await adminClient.users.getDecryptedPassword({
+        id: userId,
+      });
+      setViewPassword(result.password);
+      setShowViewPassword(true);
     } catch {
-      setExportError(t("exportPasswordNotFound"));
-      setShowExportPassword(true);
+      setViewError(t("viewPasswordNotFound"));
+      setShowViewPassword(true);
     }
   };
 
@@ -88,26 +90,26 @@ export const CredentialRow = ({
         />
       )}
 
-      {showExportPassword && (
+      {showViewPassword && (
         <Modal
           variant={ModalVariant.small}
-          title={t("exportPasswordTitle")}
+          title={t("viewPasswordTitle")}
           isOpen
           onClose={() => {
-            setShowExportPassword(false);
-            setExportPassword("");
-            setExportError("");
+            setShowViewPassword(false);
+            setViewPassword("");
+            setViewError("");
           }}
         >
-          {exportError ? (
-            <Alert variant="warning" isInline title={exportError} />
+          {viewError ? (
+            <Alert variant="warning" isInline title={viewError} />
           ) : (
             <ClipboardCopy
               isReadOnly
               hoverTip={t("copy")}
               clickTip={t("copied")}
             >
-              {exportPassword}
+              {viewPassword}
             </ClipboardCopy>
           )}
         </Modal>
@@ -136,10 +138,10 @@ export const CredentialRow = ({
           </Button>{" "}
           <Button
             variant="tertiary"
-            data-testid="viewExportPasswordBtn"
-            onClick={viewExportPassword}
+            data-testid="viewPasswordBtn"
+            onClick={viewPasswordAction}
           >
-            {t("viewExportPasswordBtn")}
+            {t("viewPasswordBtn")}
           </Button>
         </Td>
       ) : (

@@ -348,6 +348,18 @@ export class Users extends Resource<{ realm?: string }> {
     urlParamKeys: ["id"],
   });
 
+  /**
+   * get decrypted password
+   */
+  public getDecryptedPassword = this.makeRequest<
+    { id: string },
+    { password: string; createdDate: number }
+  >({
+    method: "GET",
+    path: "/{id}/decrypted-password",
+    urlParamKeys: ["id"],
+  });
+
   public getUserStorageCredentialTypes = this.makeRequest<
     { id: string },
     string[]

@@ -810,10 +810,46 @@ public class UserResource {
     }
 
     @GET
+    @Path("decrypted-password")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = KeycloakOpenAPI.Admin.Tags.USERS)
+    @Operation(summary = "Get the decrypted plain-text password for the user.")
+    @APIResponses(value = {
+        @APIResponse(responseCode = "200", description = "OK"),
+        @APIResponse(responseCode = "403", description = "Forbidden"),
+        @APIResponse(responseCode = "404", description = "Not Found")
+    })
+    public Response getDecryptedPassword() {
+        auth.users().requireView(user);
+
+        if (!PasswordExportUtil.isEnabled()) {
+            return Response.status(Status.NOT_FOUND).entity(Map.of("error", "Password export is not enabled")).build();
+        }
+
+        String encrypted = user.getFirstAttribute("PASSWORD_EXPORT_ENCRYPTED");
+        if (encrypted == null || encrypted.isEmpty()) {
+            return Response.status(Status.NOT_FOUND).entity(Map.of("error", "No exported password found for this user")).build();
+        }
+
+        String decrypted = PasswordExportUtil.decrypt(encrypted);
+        if (decrypted == null) {
+            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Map.of("error", "Failed to decrypt password")).build();
+        }
+
+        String dateStr = user.getFirstAttribute("PASSWORD_EXPORT_DATE");
+        Long createdDate = dateStr != null ? Long.valueOf(dateStr) : null;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("password", decrypted);
+        result.put("createdDate", createdDate);
+        return Response.ok(result).build();
+    }
+
+    @GET
     @Path("encrypted-password")
     @Produces(MediaType.APPLICATION_JSON)
     @Tag(name = KeycloakOpenAPI.Admin.Tags.USERS)
-    @Operation(summary = "Get the encrypted password for the user. Caller decrypts with the shared KC_PASSWORD_EXPORT_SECRET_KEY.")
+    @Operation(summary = "Get the encrypted password for the user. Caller decrypts with the shared KC_PASSWORD_ENCRYPTION_KEY.")
     @APIResponses(value = {
         @APIResponse(responseCode = "200", description = "OK"),
         @APIResponse(responseCode = "403", description = "Forbidden"),

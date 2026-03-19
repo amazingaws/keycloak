@@ -97,9 +97,6 @@
         <!-- Workflows -->
         <class>org.keycloak.models.workflow.WorkflowStateEntity</class>
 
-        <!-- Password Export -->
-        <class>org.keycloak.models.jpa.entities.UserPasswordExportEntity</class>
-
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
         <properties>
