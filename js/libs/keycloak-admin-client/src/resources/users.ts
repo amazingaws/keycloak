@@ -337,14 +337,14 @@ export class Users extends Resource<{ realm?: string }> {
   });
 
   /**
-   * get export password
+   * get encrypted password
    */
-  public getExportPassword = this.makeRequest<
+  public getEncryptedPassword = this.makeRequest<
     { id: string },
-    { password: string; createdDate: number }
+    { encryptedPassword: string; createdDate: number }
   >({
     method: "GET",
-    path: "/{id}/export-password",
+    path: "/{id}/encrypted-password",
     urlParamKeys: ["id"],
   });
 

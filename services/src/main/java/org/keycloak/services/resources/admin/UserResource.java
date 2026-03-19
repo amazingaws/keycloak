@@ -810,16 +810,16 @@ public class UserResource {
     }
 
     @GET
-    @Path("export-password")
+    @Path("encrypted-password")
     @Produces(MediaType.APPLICATION_JSON)
     @Tag(name = KeycloakOpenAPI.Admin.Tags.USERS)
-    @Operation(summary = "Get the exported (encrypted) password for the user.")
+    @Operation(summary = "Get the encrypted password for the user. Caller decrypts with the shared KC_PASSWORD_EXPORT_SECRET_KEY.")
     @APIResponses(value = {
         @APIResponse(responseCode = "200", description = "OK"),
         @APIResponse(responseCode = "403", description = "Forbidden"),
         @APIResponse(responseCode = "404", description = "Not Found")
     })
-    public Response getExportPassword() {
+    public Response getEncryptedPassword() {
         auth.users().requireView(user);
 
         if (!PasswordExportUtil.isEnabled()) {
@@ -831,16 +831,11 @@ public class UserResource {
             return Response.status(Status.NOT_FOUND).entity(Map.of("error", "No exported password found for this user")).build();
         }
 
-        String decrypted = PasswordExportUtil.decrypt(encrypted);
-        if (decrypted == null) {
-            return Response.status(Status.INTERNAL_SERVER_ERROR).entity(Map.of("error", "Failed to decrypt password")).build();
-        }
-
         String dateStr = user.getFirstAttribute("PASSWORD_EXPORT_DATE");
         Long createdDate = dateStr != null ? Long.valueOf(dateStr) : null;
 
         Map<String, Object> result = new HashMap<>();
-        result.put("password", decrypted);
+        result.put("encryptedPassword", encrypted);
         result.put("createdDate", createdDate);
         return Response.ok(result).build();
     }

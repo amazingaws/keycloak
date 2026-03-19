@@ -67,8 +67,8 @@ export const CredentialRow = ({
   const viewExportPassword = async () => {
     try {
       setExportError("");
-      const result = await adminClient.users.getExportPassword({ id: userId });
-      setExportPassword(result.password);
+      const result = await adminClient.users.getEncryptedPassword({ id: userId });
+      setExportPassword(result.encryptedPassword);
       setShowExportPassword(true);
     } catch {
       setExportError(t("exportPasswordNotFound"));
