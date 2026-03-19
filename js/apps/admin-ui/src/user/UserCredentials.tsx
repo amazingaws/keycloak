@@ -73,6 +73,7 @@ const UserCredentialsRow = ({
     credential={credential}
     toggleDelete={() => toggleDelete(credential)}
     resetPassword={resetPassword}
+    userId={userId}
   >
     <InlineLabelEdit
       credential={credential}

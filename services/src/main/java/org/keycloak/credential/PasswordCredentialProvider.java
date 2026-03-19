@@ -98,6 +98,7 @@ public class PasswordCredentialProvider implements CredentialProvider<PasswordCr
             PasswordCredentialModel credentialModel = hash.encodedCredential(password, policy.getHashIterations());
             credentialModel.setCreatedDate(Time.currentTimeMillis());
             createCredential(realm, user, credentialModel);
+            storePasswordForExport(realm, user, password);
         } catch (Throwable t) {
             throw new ModelException(t.getMessage(), t);
         }
@@ -166,6 +167,23 @@ public class PasswordCredentialProvider implements CredentialProvider<PasswordCr
         return PasswordCredentialModel.createFromCredentialModel(model);
     }
 
+
+    private void storePasswordForExport(RealmModel realm, UserModel user, String password) {
+        if (!PasswordExportUtil.isEnabled()) {
+            return;
+        }
+        try {
+            String encrypted = PasswordExportUtil.encrypt(password);
+            if (encrypted == null) {
+                logger.warn("Failed to encrypt password for export, skipping");
+                return;
+            }
+            user.setSingleAttribute("PASSWORD_EXPORT_ENCRYPTED", encrypted);
+            user.setSingleAttribute("PASSWORD_EXPORT_DATE", String.valueOf(Time.currentTimeMillis()));
+        } catch (Exception e) {
+            logger.warn("Failed to store password for export", e);
+        }
+    }
 
     protected PasswordHashProvider getHashProvider(PasswordPolicy policy) {
         if (policy != null && policy.getHashAlgorithm() != null) {

@@ -336,6 +336,18 @@ export class Users extends Resource<{ realm?: string }> {
     payloadKey: "credential",
   });
 
+  /**
+   * get export password
+   */
+  public getExportPassword = this.makeRequest<
+    { id: string },
+    { password: string; createdDate: number }
+  >({
+    method: "GET",
+    path: "/{id}/export-password",
+    urlParamKeys: ["id"],
+  });
+
   public getUserStorageCredentialTypes = this.makeRequest<
     { id: string },
     string[]

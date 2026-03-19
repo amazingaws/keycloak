@@ -1,4 +1,4 @@
-import { ReactNode, useMemo } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Td } from "@patternfly/react-table";
 import {
@@ -7,6 +7,10 @@ import {
   DropdownItem,
   DropdownList,
   MenuToggle,
+  Modal,
+  ModalVariant,
+  ClipboardCopy,
+  Alert,
 } from "@patternfly/react-core";
 import type CredentialRepresentation from "@keycloak/keycloak-admin-client/lib/defs/credentialRepresentation";
 import useToggle from "../../utils/useToggle";
@@ -14,12 +18,14 @@ import useLocaleSort from "../../utils/useLocaleSort";
 import { CredentialDataDialog } from "./CredentialDataDialog";
 import useFormatDate from "../../utils/useFormatDate";
 import { EllipsisVIcon } from "@patternfly/react-icons";
+import { useAdminClient } from "../../admin-client";
 
 type CredentialRowProps = {
   credential: CredentialRepresentation;
   resetPassword: () => void;
   toggleDelete: () => void;
   children: ReactNode;
+  userId: string;
 };
 
 export const CredentialRow = ({
@@ -27,12 +33,17 @@ export const CredentialRow = ({
   resetPassword,
   toggleDelete,
   children,
+  userId,
 }: CredentialRowProps) => {
+  const { adminClient } = useAdminClient();
   const formatDate = useFormatDate();
   const { t } = useTranslation();
   const [showData, toggleShow] = useToggle();
   const [kebabOpen, toggleKebab] = useToggle();
   const localeSort = useLocaleSort();
+  const [showExportPassword, setShowExportPassword] = useState(false);
+  const [exportPassword, setExportPassword] = useState("");
+  const [exportError, setExportError] = useState("");
 
   const rows = useMemo(() => {
     if (!credential.credentialData) {
@@ -53,6 +64,18 @@ export const CredentialRow = ({
     });
   }, [credential.credentialData]);
 
+  const viewExportPassword = async () => {
+    try {
+      setExportError("");
+      const result = await adminClient.users.getExportPassword({ id: userId });
+      setExportPassword(result.password);
+      setShowExportPassword(true);
+    } catch {
+      setExportError(t("exportPasswordNotFound"));
+      setShowExportPassword(true);
+    }
+  };
+
   return (
     <>
       {showData && Object.keys(credential).length !== 0 && (
@@ -63,6 +86,31 @@ export const CredentialRow = ({
             toggleShow();
           }}
         />
+      )}
+
+      {showExportPassword && (
+        <Modal
+          variant={ModalVariant.small}
+          title={t("exportPasswordTitle")}
+          isOpen
+          onClose={() => {
+            setShowExportPassword(false);
+            setExportPassword("");
+            setExportError("");
+          }}
+        >
+          {exportError ? (
+            <Alert variant="warning" isInline title={exportError} />
+          ) : (
+            <ClipboardCopy
+              isReadOnly
+              hoverTip={t("copy")}
+              clickTip={t("copied")}
+            >
+              {exportPassword}
+            </ClipboardCopy>
+          )}
+        </Modal>
       )}
 
       <Td>{children}</Td>
@@ -85,6 +133,13 @@ export const CredentialRow = ({
             onClick={resetPassword}
           >
             {t("resetPasswordBtn")}
+          </Button>{" "}
+          <Button
+            variant="tertiary"
+            data-testid="viewExportPasswordBtn"
+            onClick={viewExportPassword}
+          >
+            {t("viewExportPasswordBtn")}
           </Button>
         </Td>
       ) : (
